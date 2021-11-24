@@ -12,8 +12,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Repositorio\livros.csv">
+    <None Update="HTML\formulario.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Repositorio\livros.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
