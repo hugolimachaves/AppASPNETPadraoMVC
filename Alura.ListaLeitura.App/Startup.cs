@@ -9,6 +9,7 @@ using Alura.ListaLeitura.App.Negocio;
 using System;
 using System.Linq;
 using System.IO;
+using Alura.ListaLeitura.App.Logica;
 
 namespace Alura.ListaLeitura.App
 {
@@ -21,117 +22,28 @@ namespace Alura.ListaLeitura.App
         public void Configure(IApplicationBuilder app)
         {
             var builder = new RouteBuilder(app);
-            builder.MapRoute("Livros/ParaLer", LivrosParaLer);
-            builder.MapRoute("Livros/Lendo", LivrosLendo);
-            builder.MapRoute("Livros/Lidos", LivrosLidos);
-            builder.MapRoute("Cadastro/NovoLivro/{nome}/{autor}", NovoLivroParaLer);
-            builder.MapRoute("Livros/Detalhes/{id:int}", ExibeDetalhes); // colocando a restrição no tipo de dado de id : {tipo}
-            builder.MapRoute("Cadastro/NovoLivro", ExibeFormulario);
-            builder.MapRoute("Cadastro/Incluir", ProcessaFormulario);
+            builder.MapRoute("Livros/ParaLer", LivrosLogica.LivrosParaLer);
+            builder.MapRoute("Livros/Lendo", LivrosLogica.LivrosLendo);
+            builder.MapRoute("Livros/Lidos", LivrosLogica.LivrosLidos);
+            builder.MapRoute("Livros/Detalhes/{id:int}", LivrosLogica.ExibeDetalhes); // colocando a restrição no tipo de dado de id : {tipo}
+            builder.MapRoute("Cadastro/NovoLivro/{nome}/{autor}", CadastroLogica.NovoLivroParaLer);
+            builder.MapRoute("Cadastro/NovoLivro", CadastroLogica.ExibeFormulario);
+            builder.MapRoute("Cadastro/Incluir", CadastroLogica.ProcessaFormulario);
             var rotas = builder.Build();
 
-            app.UseRouter(rotas);
-            //app.Run(Roteamento);
+            app.UseRouter(rotas); // Esse código determina que o estágio terminal do
+                                  // request pipeline irá tratar as rotas definidas
+                                  // pela coleção armazenada na variável rotas.
+                                  // Sem ele não seria possível tratar qualquer requisição na aplicação.
         }
 
-        public Task ProcessaFormulario(HttpContext context)
-        {
-            var livro = new Livro()
-            {
-                Autor = context.Request.Form["autor"].First(),
-                Titulo = context.Request.Form   ["titulo"].First()
-            };
-            Console.WriteLine(livro.Titulo);
-            Console.WriteLine(livro.Autor);
-            var repo = new LivroRepositorioCSV();
-            repo.Incluir(livro);
-            return context.Response.WriteAsync("O livro foi adicionado com sucesso");
-
-
-        }
-
-        public Task ExibeFormulario(HttpContext context)
-        {
-            var html = CarregaArquivoHTML("formulario");
-            return context.Response.WriteAsync(html);
-        }
-
-        private string CarregaArquivoHTML(string nomeArquivo)
-        {
         
-            var nomeCompletoArquivo = $"D:/Cursos/C#_web/Alura.ListaLeitura/Alura.ListaLeitura.App/HTML/{nomeArquivo}.html";
-            //Nota: importante usar o $ para interpolar string com variaveis
-            using( var arquivo = File.OpenText(nomeCompletoArquivo)) 
-            {
-                return arquivo.ReadToEnd();
-            }
-        }
+        
 
-        public Task ExibeDetalhes(HttpContext context)
-        {
-            int id = Convert.ToInt32(context.GetRouteValue("id"));
-            var repo = new LivroRepositorioCSV();
-            var livro = repo.Todos.First(l => l.Id == id);
-            return context.Response.WriteAsync(livro.Detalhes());
-        }
-        public Task NovoLivroParaLer(HttpContext context)
-        {
+   
+       
 
-            var livro = new Livro()
-            {
-                Titulo = context.GetRouteValue("nome").ToString(), // ambas conversões de string são válidas!
-                Autor = Convert.ToString(context.GetRouteValue("autor"))  // ambas conversões de string são válidas!
-            };
-            var repo = new LivroRepositorioCSV();
-            repo.Incluir(livro);
-            return context.Response.WriteAsync("O livro foi adicionado com sucesso");
-        }
-
-        public Task Roteamento(HttpContext context)
-        {
-            //var _repo = new LivroRepositorioCSV();
-            var caminhosAtendidos = new  Dictionary<string, RequestDelegate>
-            {
-                {"/Livros/ParaLer", LivrosParaLer},
-                {"/Livros/Lendo",  LivrosLendo },
-                {"/Livros/Lidos", LivrosLidos}
-
-            };
-
-            if( caminhosAtendidos.ContainsKey(context.Request.Path) )
-            {
-                var metodo = caminhosAtendidos[context.Request.Path]; // a variável e do tipo request delegate
-                return metodo.Invoke(context); // retornando a variavel request delegate sendo invocada
-            }
-            context.Response.StatusCode = 404; //retornando um erro de requisição 404
-            return context.Response.WriteAsync("caminho inexistente");
-        }
-
-        LivroRepositorioCSV _repo = new LivroRepositorioCSV();
-        public Task LivrosParaLer(HttpContext context) //context é um objeto que tem todas as informações específicas sobre a requisição.
-        {
-            var _repo = new LivroRepositorioCSV();
-            var conteudoArquivo = CarregaArquivoHTML("ParaLer");
-
-            foreach(var livro in _repo.ParaLer.Livros)
-            {
-                conteudoArquivo = conteudoArquivo.Replace("#NOVO-ITEM", $"<li>{livro.Titulo} - {livro.Autor}</li>#NOVO-ITEM");
-            }
-            conteudoArquivo = conteudoArquivo.Replace("#NOVO-ITEM","");
-            return context.Response.WriteAsync(conteudoArquivo); // aqui eu vou escreve nas resposta alguma coisa (nesse contexto é uma lista de livros)
-        }
-
-        public Task LivrosLendo(HttpContext context) 
-        {
-            //var _repo = new LivroRepositorioCSV();
-            return context.Response.WriteAsync(_repo.Lendo.ToString());
-        }
-
-        public Task LivrosLidos(HttpContext context)
-        {
-            return context.Response.WriteAsync(_repo.Lidos.ToString());
-        }
-
+      
        
     }
 }
