@@ -38,8 +38,8 @@ namespace Alura.ListaLeitura.App
         {
             var livro = new Livro()
             {
-                Autor = context.Request.Query["autor"].First(),
-                Titulo = context.Request.Query["titulo"].First()
+                Autor = context.Request.Form["autor"].First(),
+                Titulo = context.Request.Form   ["titulo"].First()
             };
             Console.WriteLine(livro.Titulo);
             Console.WriteLine(livro.Autor);
@@ -110,9 +110,15 @@ namespace Alura.ListaLeitura.App
         LivroRepositorioCSV _repo = new LivroRepositorioCSV();
         public Task LivrosParaLer(HttpContext context) //context é um objeto que tem todas as informações específicas sobre a requisição.
         {
+            var _repo = new LivroRepositorioCSV();
+            var conteudoArquivo = CarregaArquivoHTML("ParaLer");
 
-            //var _repo = new LivroRepositorioCSV();
-            return context.Response.WriteAsync(_repo.ParaLer.ToString()); // aqui eu vou escreve nas resposta alguma coisa (nesse contexto é uma lista de livros)
+            foreach(var livro in _repo.ParaLer.Livros)
+            {
+                conteudoArquivo = conteudoArquivo.Replace("#NOVO-ITEM", $"<li>{livro.Titulo} - {livro.Autor}</li>#NOVO-ITEM");
+            }
+            conteudoArquivo = conteudoArquivo.Replace("#NOVO-ITEM","");
+            return context.Response.WriteAsync(conteudoArquivo); // aqui eu vou escreve nas resposta alguma coisa (nesse contexto é uma lista de livros)
         }
 
         public Task LivrosLendo(HttpContext context) 
